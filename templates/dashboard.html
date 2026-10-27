@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SkillBridge | Placement Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">S</span><span>SkillBridge</span></div>
+    <p class="nav-label">WORKSPACE</p>
+    <a class="nav-item active" href="#overview">▦ &nbsp; Overview</a>
+    <a class="nav-item" href="#goals">✓ &nbsp; Learning goals</a>
+    <a class="nav-item" href="#applications">↗ &nbsp; Applications</a>
+    <div class="sidebar-bottom"><div class="avatar">MM</div><div><strong>My Workspace</strong><small>Placement journey</small></div></div>
+  </aside>
+  <main class="main" id="overview">
+    <header class="topbar"><div><p class="eyebrow">YOUR CAREER, ORGANIZED</p><h1>Placement dashboard</h1><p class="subhead">Build skills. Track progress. Take your next step.</p></div><div class="today">STUDENT WORKSPACE</div></header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}<div class="flash-wrap">{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+    {% endwith %}
+
+    <section class="stats">
+      <article class="stat-card"><div class="stat-top"><span>Total learning goals</span><span class="stat-icon purple">◎</span></div><div class="stat-number">{{ total_goals }}</div><div class="stat-note">Your preparation checklist</div></article>
+      <article class="stat-card"><div class="stat-top"><span>Goals completed</span><span class="stat-icon green">✓</span></div><div class="stat-number">{{ completed }}</div><div class="stat-note">Small steps add up</div></article>
+      <article class="stat-card"><div class="stat-top"><span>Applications tracked</span><span class="stat-icon orange">↗</span></div><div class="stat-number">{{ total_apps }}</div><div class="stat-note">Keep every opportunity visible</div></article>
+      <article class="stat-card progress-card"><div class="stat-top"><span>Preparation progress</span><span>{{ progress }}%</span></div><div class="progress-track"><div class="progress-fill" style="width: {{ progress }}%"></div></div><div class="stat-note">Based on completed learning goals</div></article>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel" id="goals">
+        <div class="panel-heading"><div><h2>Learning goals</h2><p>Manage your placement preparation tasks.</p></div><span class="pill">{{ total_goals }} total</span></div>
+        <form class="add-form" action="{{ url_for('add_goal') }}" method="post">
+          <input name="title" placeholder="e.g. Practice Java arrays" maxlength="120" required>
+          <select name="category"><option>Coding</option><option>Database</option><option>Core subject</option><option>Career</option><option>Communication</option><option>Other</option></select>
+          <button class="primary-btn" type="submit">+ Add goal</button>
+        </form>
+        <div class="list">
+          {% for goal in goals %}
+          <div class="list-row">
+            <div class="goal-dot {% if goal.status == 'Completed' %}done{% elif goal.status == 'In Progress' %}working{% endif %}"></div>
+            <div class="row-main"><strong>{{ goal.title }}</strong><small>{{ goal.category }}</small></div>
+            <form method="post" action="{{ url_for('update_goal', goal_id=goal.id) }}">
+              <select class="status-select" name="status" onchange="this.form.submit()">
+                {% for s in ['Pending', 'In Progress', 'Completed'] %}<option value="{{ s }}" {% if goal.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+              </select>
+            </form>
+            <form method="post" action="{{ url_for('delete_goal', goal_id=goal.id) }}" onsubmit="return confirm('Delete this goal?')"><button class="icon-btn" title="Delete goal" aria-label="Delete goal">×</button></form>
+          </div>
+          {% else %}<p class="empty">No goals yet. Add your first learning goal above.</p>{% endfor %}
+        </div>
+      </article>
+
+      <article class="panel" id="applications">
+        <div class="panel-heading"><div><h2>Job applications</h2><p>Keep track of opportunities.</p></div><span class="pill">{{ total_apps }} tracked</span></div>
+        <form class="application-form" action="{{ url_for('add_application') }}" method="post">
+          <input name="company" placeholder="Company name" maxlength="100" required>
+          <input name="role" placeholder="Role (e.g. Software Intern)" maxlength="100" required>
+          <select name="status"><option>Preparing</option><option selected>Applied</option><option>Assessment</option><option>Interview</option><option>Offer</option><option>Rejected</option></select>
+          <button class="primary-btn" type="submit">Add application</button>
+        </form>
+        <div class="application-list">
+          {% for item in applications %}
+          <div class="application-row">
+            <div class="company-logo">{{ item.company[:1]|upper }}</div>
+            <div class="row-main"><strong>{{ item.company }}</strong><small>{{ item.role }} · {{ item.applied_on }}</small></div>
+            <span class="status-badge {{ item.status|lower }}">{{ item.status }}</span>
+            <form method="post" action="{{ url_for('delete_application', application_id=item.id) }}" onsubmit="return confirm('Delete this application?')"><button class="icon-btn" title="Delete application" aria-label="Delete application">×</button></form>
+          </div>
+          {% else %}<p class="empty">No applications yet. Add an opportunity above.</p>{% endfor %}
+        </div>
+      </article>
+    </section>
+    <footer>SkillBridge · Student Placement Preparation Tracker <span>Built with Flask & SQLite</span></footer>
+  </main>
+</body>
+</html>
